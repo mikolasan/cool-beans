@@ -4,11 +4,11 @@
 #ifndef BEAN_WINDOW
 #define BEAN_WINDOW
 
+#include <iostream>
 #include <functional>
 #include <X11/Xlib.h>
 
 #include "BeanFrameBuffer.h"
-
 
 namespace {
 
@@ -21,13 +21,20 @@ const int window_y = 0;
 
 class BeanWindow {
 public:
-  BeanWindow() {
+  BeanWindow() {}
+  ~BeanWindow() {}
+
+  void create(int width = window_width,
+      int height = window_height,
+      int pos_x = window_x,
+      int pos_y = window_y) {
     mr_display = XOpenDisplay(NULL);
     if (!mr_display) {
       std::cerr << "No X display" << "\n";
       return;
     }
-
+    mr_width = width;
+    mr_height = height;
     mr_screen = DefaultScreen(mr_display);
     mr_parent = DefaultRootWindow(mr_display);
     BeanFrameBuffer bean_frame_buffer = BeanFrameBuffer(mr_display);
@@ -42,11 +49,12 @@ public:
     attributes.background_pixel = black;
     attributes.border_pixel = black;
     attributes.colormap = XCreateColormap(mr_display, mr_parent, visual, AllocNone);
+
     mr_window = XCreateWindow(
       mr_display,
       mr_parent,
-      window_x, window_y,
-      window_width, window_height,
+      pos_x, pos_y,
+      width, height,
       border_width,
       depth,
       window_class,
@@ -58,8 +66,6 @@ public:
     XMapWindow(mr_display, mr_window);
   }
 
-  ~BeanWindow() {}
-
   void close() {
     XDestroyWindow(mr_display, mr_window);
     XCloseDisplay(mr_display);
@@ -69,7 +75,7 @@ public:
     init();
   }
 
-  void start(std::function<void()> draw) {
+  void start_event_loop(std::function<void()> draw) {
     XEvent event;
     bool quit = false;
     while (!quit) {
@@ -86,11 +92,10 @@ public:
       }
     }
     std::cout << "Stop drawing" << "\n";
-    //close();
   }
 
-  int width() const { return window_width; }
-  int height() const { return window_height; }
+  int width() const { return mr_width; }
+  int height() const { return mr_height; }
   Display* display() const { return mr_display; }
   Window window() const { return mr_window; }
   int screen() const { return mr_screen; }
@@ -100,6 +105,8 @@ private:
   int mr_screen;
   Window mr_parent;
   Window mr_window;
+  int mr_width;
+  int mr_height;
 };
 
 #endif /* end of include guard: BEAN_WINDOW */

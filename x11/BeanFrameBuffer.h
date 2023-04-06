@@ -5,6 +5,7 @@
 #define BEAN_FRAME_BUFFER
 
 #include <iostream>
+#include <GL/glx.h>
 
 namespace {
 
